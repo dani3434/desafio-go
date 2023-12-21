@@ -1,17 +1,15 @@
-# Use a imagem oficial do Go
-FROM golang:1.16-alpine
+# Fase de compilação
+FROM golang:1.16-alpine AS build
 
-# Defina o diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copie o código Go para o container
-COPY hello.go .
-
-# Inicialize o módulo Go
+RUN printf 'package main\nimport "fmt"\nfunc main() {\n    fmt.Println(" Full Cycle Rocks!!")\n}' > hello.go
 RUN go mod init hello
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o hello .
 
-# Compile o programa Go
-RUN go build -o hello
+# Fase de execução
+FROM scratch
 
-# Execute o programa Go quando o container iniciar
-CMD ["/app/hello"]
+COPY --from=build /app/hello /hello
+
+CMD ["/hello"]
